@@ -23,7 +23,7 @@ def parse_packet_header(data: bytes):
       18: uint32   m_frameIdentifier         # Identifier for the frame the data was retrieved on
       22: uint8    m_playerCarIndex          # Index of player's car in the array
       23: uint8    m_secondaryPlayerCarIndex # Index of secondary player's car in the array (splitscreen)
-                                                # 255 if no second player
+                                             # 255 if no second player
 
     Raises ValueError wenn data zu kurz ist.
     """
