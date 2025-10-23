@@ -13,16 +13,17 @@ def parse_packet_header(data: bytes):
     """Parst die ersten 24 Bytes laut PacketHeader-Struktur und gibt ein Dict mit benannten Feldern zurück.
 
     Erwartete Felder (mit Offsets, little-endian):
-      0: uint16    m_packetFormat
-      2: uint8     m_gameMajorVersion
-      3: uint8     m_gameMinorVersion
-      4: uint8     m_packetVersion
-      5: uint8     m_packetId
-      6: uint64    m_sessionUID
-      14: float    m_sessionTime
-      18: uint32   m_frameIdentifier
-      22: uint8    m_playerCarIndex
-      23: uint8    m_secondaryPlayerCarIndex
+      0: uint16    m_packetFormat            # 2022
+      2: uint8     m_gameMajorVersion        # Game major version - "X.00"
+      3: uint8     m_gameMinorVersion        # Game minor version - "1.XX"
+      4: uint8     m_packetVersion           # Version of this packet type, all start from 1
+      5: uint8     m_packetId                # Identifier for the packet type
+      6: uint64    m_sessionUID              # Unique identifier for the session
+      14: float    m_sessionTime             # Session timestamp
+      18: uint32   m_frameIdentifier         # Identifier for the frame the data was retrieved on
+      22: uint8    m_playerCarIndex          # Index of player's car in the array
+      23: uint8    m_secondaryPlayerCarIndex # Index of secondary player's car in the array (splitscreen)
+                                                # 255 if no second player
 
     Raises ValueError wenn data zu kurz ist.
     """
