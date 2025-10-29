@@ -4,6 +4,7 @@ import time
 import json
 import base64
 import os
+import sys
 
 def main():
     parser = argparse.ArgumentParser(description="UDP-Paket-Empfänger, der Pakete persistent in einer JSONL-Datei speichert.")
@@ -19,8 +20,36 @@ def main():
     # lowercase variable names to follow PEP8 / function-local naming conventions
     udp_ip = args.bind_ip
     udp_port = args.port
-    out_file = args.out_file
 
+    # Verhindere unbeabsichtigtes Überschreiben der Ausgabedatei.
+    out_file = args.out_file
+    # Wenn die Datei bereits existiert, frage interaktiv nach einem Alternativnamen.
+    if os.path.exists(out_file):
+        if os.path.isdir(out_file):
+            parser.error(f"Der angegebene Pfad '{out_file}' ist ein Verzeichnis.")
+        if sys.stdin.isatty():
+            print(f"Zieldatei '{out_file}' existiert bereits. Gib einen alternativen Dateinamen an oder drücke Enter zum Abbrechen.")
+            while True:
+                try:
+                    alt = input("Neuer Dateiname (oder Enter zum Abbrechen): ").strip()
+                except EOFError:
+                    parser.error(f"Zieldatei '{out_file}' existiert bereits. Bitte starte interaktiv oder verwende --out-file mit einem neuen Pfad.")
+                if not alt:
+                    print("Abbruch: Ausgabe-Datei nicht geändert. Beende.", flush=True)
+                    return
+                # Nimm die angegebene Alternative und prüfe erneut
+                out_file = alt
+                if os.path.isdir(out_file):
+                    print(f"'{out_file}' ist ein Verzeichnis, bitte einen Dateinamen angeben.", flush=True)
+                    continue
+                if os.path.exists(out_file):
+                    print(f"Datei '{out_file}' existiert bereits. Bitte anderen Namen angeben.", flush=True)
+                    continue
+                break
+        else:
+            parser.error(f"Zieldatei '{out_file}' existiert bereits; bitte starte interaktiv oder verwende --out-file mit einem neuen Pfad.")
+
+    # Stelle sicher, dass das Verzeichnis existiert (wird beim Schreiben ggf. erstellt)
     os.makedirs(os.path.dirname(out_file) or '.', exist_ok=True)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
