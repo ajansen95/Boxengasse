@@ -10,6 +10,10 @@ def main():
     parser.add_argument("--bind-ip", default="0.0.0.0", help="IP zum Binden (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=20777, help="UDP-Port zum Lauschen (default: 20777)")
     parser.add_argument("--out-file", default="ps4_packets.jsonl", help="Datei zum Anhängen der empfangenen Pakete (default: ps4_packets.jsonl)")
+    parser.add_argument("--flush-every", type=int, default=100, help="Flush nach N Paketen (default: 100)")
+    parser.add_argument("--flush-interval", type=float, default=1.0, help="Flush mindestens alle T Sekunden (default: 1.0)")
+    parser.add_argument("--fsync-every-seconds", type=float, default=10.0, help="Führe os.fsync() alle S Sekunden aus (0 = deaktiviert, default: 10.0)")
+    parser.add_argument("--fsync-every-packets", type=int, default=0, help="Führe os.fsync() nach N Paketen aus (0 = deaktiviert, default: 0)")
     args = parser.parse_args()
 
     UDP_IP = args.bind_ip
@@ -21,12 +25,23 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
 
-    print(f"🎧 Lausche auf UDP {UDP_IP}:{UDP_PORT}... (Pakete werden in '{out_file}' gespeichert, little-endian Annahme irrelevant für Raw-Pakete)")
+    print(f"🎧 Lausche auf UDP {UDP_IP}:{UDP_PORT}... (Pakete werden in '{out_file}' gespeichert)")
 
-    # Datei im Anhängemodus öffnen
+    # Datei im Anhängemodus öffnen (Text-Modus ist in Ordnung, wir schreiben JSON-Text)
     f = open(out_file, "a", encoding="utf-8")
 
     last_ts = None
+    last_flush_time = time.time()
+    last_fsync_time = time.time()
+    count_since_flush = 0
+    count_since_fsync = 0
+    total_packets = 0
+
+    flush_every = max(1, args.flush_every)
+    flush_interval = max(0.0, args.flush_interval)
+    fsync_every_seconds = max(0.0, args.fsync_every_seconds)
+    fsync_every_packets = max(0, args.fsync_every_packets)
+
     try:
         while True:
             data, addr = sock.recvfrom(65535)
@@ -39,16 +54,63 @@ def main():
                 "length": len(data),
                 "payload_b64": base64.b64encode(data).decode("ascii")
             }
+
+            # Schreibe in Datei (gepuffert)
             f.write(json.dumps(record, separators=(",", ":")) + "\n")
-            f.flush()
+            total_packets += 1
+            count_since_flush += 1
+            count_since_fsync += 1
             last_ts = ts
 
-            print(f"📦 {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))} - Paket von {addr}: {len(data)} Bytes (intervall={interval:.3f}s) -> gespeichert")
+            now = time.time()
+            # Entscheide, ob wir flushen sollten
+            if (flush_every and count_since_flush >= flush_every) or (flush_interval and (now - last_flush_time) >= flush_interval):
+                try:
+                    f.flush()
+                except Exception as e:
+                    print(f"Warnung: flush fehlgeschlagen: {e}")
+                last_flush_time = now
+                count_since_flush = 0
+
+            # Entscheide, ob wir fsync sollten
+            do_fsync = False
+            if (fsync_every_seconds and fsync_every_seconds > 0.0 and (now - last_fsync_time) >= fsync_every_seconds):
+                do_fsync = True
+            if (fsync_every_packets and fsync_every_packets > 0 and count_since_fsync >= fsync_every_packets):
+                do_fsync = True
+
+            if do_fsync:
+                try:
+                    f.flush()
+                    os.fsync(f.fileno())
+                except Exception as e:
+                    print(f"Warnung: fsync fehlgeschlagen: {e}")
+                last_fsync_time = now
+                count_since_fsync = 0
+
+            print(f"📦 {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))} - Paket von {addr}: {len(data)} Bytes (intervall={interval:.3f}s) -> gespeichert (total={total_packets})")
+
     except KeyboardInterrupt:
-        print("\nBeendet durch Benutzer.")
+        print("\nBeendet durch Benutzer. Flushing verbleibender Daten...")
+        # am Ende noch einmal flush + fsync falls gewünscht
+        try:
+            f.flush()
+            if fsync_every_seconds > 0.0 or fsync_every_packets > 0:
+                try:
+                    os.fsync(f.fileno())
+                except Exception as e:
+                    print(f"Warnung: fsync beim Beenden fehlgeschlagen: {e}")
+        except Exception as e:
+            print(f"Warnung: finaler flush fehlgeschlagen: {e}")
     finally:
-        f.close()
-        sock.close()
+        try:
+            f.close()
+        except Exception:
+            pass
+        try:
+            sock.close()
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':
