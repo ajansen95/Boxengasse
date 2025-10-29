@@ -16,16 +16,17 @@ def main():
     parser.add_argument("--fsync-every-packets", type=int, default=0, help="Führe os.fsync() nach N Paketen aus (0 = deaktiviert, default: 0)")
     args = parser.parse_args()
 
-    UDP_IP = args.bind_ip
-    UDP_PORT = args.port
+    # lowercase variable names to follow PEP8 / function-local naming conventions
+    udp_ip = args.bind_ip
+    udp_port = args.port
     out_file = args.out_file
 
     os.makedirs(os.path.dirname(out_file) or '.', exist_ok=True)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((UDP_IP, UDP_PORT))
+    sock.bind((udp_ip, udp_port))
 
-    print(f"🎧 Lausche auf UDP {UDP_IP}:{UDP_PORT}... (Pakete werden in '{out_file}' gespeichert)")
+    print(f"🎧 Lausche auf UDP {udp_ip}:{udp_port}... (Pakete werden in '{out_file}' gespeichert)")
 
     # Datei im Anhängemodus öffnen (Text-Modus ist in Ordnung, wir schreiben JSON-Text)
     f = open(out_file, "a", encoding="utf-8")
@@ -67,7 +68,7 @@ def main():
             if (flush_every and count_since_flush >= flush_every) or (flush_interval and (now - last_flush_time) >= flush_interval):
                 try:
                     f.flush()
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     print(f"Warnung: flush fehlgeschlagen: {e}")
                 last_flush_time = now
                 count_since_flush = 0
@@ -83,7 +84,7 @@ def main():
                 try:
                     f.flush()
                     os.fsync(f.fileno())
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     print(f"Warnung: fsync fehlgeschlagen: {e}")
                 last_fsync_time = now
                 count_since_fsync = 0
@@ -98,18 +99,18 @@ def main():
             if fsync_every_seconds > 0.0 or fsync_every_packets > 0:
                 try:
                     os.fsync(f.fileno())
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     print(f"Warnung: fsync beim Beenden fehlgeschlagen: {e}")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             print(f"Warnung: finaler flush fehlgeschlagen: {e}")
     finally:
         try:
             f.close()
-        except Exception:
+        except OSError:
             pass
         try:
             sock.close()
-        except Exception:
+        except OSError:
             pass
 
 
