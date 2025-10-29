@@ -42,7 +42,7 @@ def main():
 
     try:
         for i, rec in enumerate(records):
-            # Erster Datensatz: kein Wartezeit
+            # Erster Datensatz: keine Wartezeit
             if i == 0:
                 interval = 0.0
             else:
