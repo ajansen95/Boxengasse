@@ -13,6 +13,10 @@ def main():
     parser.add_argument("--speed", type=float, default=1.0, help="Geschwindigkeitsfaktor: 1.0 = originale Intervalle, 2.0 = doppelte Geschwindigkeit (Intervalle halbiert)")
     args = parser.parse_args()
 
+    # Validierung von speed verhindern Division durch Null und ungewollte negative Werte
+    if args.speed <= 0:
+        parser.error("--speed muss größer als 0 sein")
+
     records = []
     with open(args.in_file, "r", encoding="utf-8") as f:
         for line in f:
@@ -50,7 +54,9 @@ def main():
                 if rec.get("interval") is not None:
                     try:
                         interval = float(rec.get("interval", 0.0)) / args.speed
-                    except Exception:
+                    except (ValueError, TypeError, ZeroDivisionError) as e:
+                        # Nur spezifische Exceptions auffangen und protokollieren
+                        print(f"[{i+1}/{len(records)}] Ungültiges 'interval' in Datensatz: {e} – setze interval=0.0", flush=True)
                         interval = 0.0
                 else:
                     # Fallback: berechne aus timestamps
