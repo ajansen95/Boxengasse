@@ -7,7 +7,7 @@ import base64
 
 def main():
     parser = argparse.ArgumentParser(description="Sende aufgezeichnete PS4-UDP-Pakete wieder (mit originalen Intervallen).")
-    parser.add_argument("--in-file", default="ps4_packets.jsonl", help="Eingabedatei mit aufgezeichneten Paketen (JSONL)")
+    parser.add_argument("--in-file", default="recordings/ps4_packets.jsonl", help="Eingabedatei mit aufgezeichneten Paketen (JSONL). Standard: recordings/ps4_packets.jsonl")
     parser.add_argument("--dest-ip", default="127.0.0.1", help="Ziel-IP zum Senden der Pakete")
     parser.add_argument("--dest-port", type=int, default=20777, help="Ziel-Port")
     parser.add_argument("--speed", type=float, default=1.0, help="Geschwindigkeitsfaktor: 1.0 = originale Intervalle, 2.0 = doppelte Geschwindigkeit (Intervalle halbiert)")

@@ -9,7 +9,7 @@ def main():
     parser = argparse.ArgumentParser(description="UDP-Paket-Empfänger, der Pakete persistent in einer JSONL-Datei speichert.")
     parser.add_argument("--bind-ip", default="0.0.0.0", help="IP zum Binden (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=20777, help="UDP-Port zum Lauschen (default: 20777)")
-    parser.add_argument("--out-file", default="ps4_packets.jsonl", help="Datei zum Anhängen der empfangenen Pakete (default: ps4_packets.jsonl)")
+    parser.add_argument("--out-file", default="recordings/ps4_packets.jsonl", help="Datei zum Anhängen der empfangenen Pakete (default: recordings/ps4_packets.jsonl)")
     parser.add_argument("--flush-every", type=int, default=100, help="Flush nach N Paketen (default: 100)")
     parser.add_argument("--flush-interval", type=float, default=1.0, help="Flush mindestens alle T Sekunden (default: 1.0)")
     parser.add_argument("--fsync-every-seconds", type=float, default=10.0, help="Führe os.fsync() alle S Sekunden aus (0 = deaktiviert, default: 10.0)")

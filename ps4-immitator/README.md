@@ -21,13 +21,13 @@ Hinweis: Base64 vergrößert Binärdaten um ~33% (4/3).
 
 ## ⚙️ `savePS4packets.py` — Optionen & Verhalten
 
-Beschreibung: Lauscht auf UDP (standard: `0.0.0.0:20777`) und schreibt empfangene Pakete in eine Datei.
+Beschreibung: Lauscht auf UDP (standard: `0.0.0.0:20777`) und schreibt empfangene Pakete in eine Datei unter `ps4-immitator/recordings` (Standarddatei: `recordings/ps4_packets.jsonl`).
 
 Wichtige CLI-Optionen:
 
 - `--bind-ip` (default: `0.0.0.0`) — IP zum Binden.
 - `--port` (default: `20777`) — UDP-Port.
-- `--out-file` (default: `ps4_packets.jsonl`) — Zieldatei.
+- `--out-file` (default: `recordings/ps4_packets.jsonl`) — Zieldatei (innerhalb des `ps4-immitator/recordings`-Ordners als Standard).
 
 Schreib-/Durability-Optionen (neu hinzugefügt, empfohlen für längere Läufe):
 
@@ -44,11 +44,11 @@ Tipps:
 
 ## ▶️ `playPS4packets.py` — Optionen & Verhalten
 
-Beschreibung: Liest eine JSONL-Datei und sendet die Pakete über UDP an die angegebene Zieladresse. Die Wiedergabe respektiert die gespeicherten `interval`-Werte (falls vorhanden) — sonst werden Intervalle aus `timestamp` berechnet.
+Beschreibung: Liest eine JSONL-Datei (standardmäßig aus `recordings/ps4_packets.jsonl`) und sendet die Pakete über UDP an die angegebene Zieladresse. Die Wiedergabe respektiert die gespeicherten `interval`-Werte (falls vorhanden) — sonst werden Intervalle aus `timestamp` berechnet.
 
 Wichtige CLI-Optionen:
 
-- `--in-file` (default: `ps4_packets.jsonl`) — Eingabedatei.
+- `--in-file` (default: `recordings/ps4_packets.jsonl`) — Eingabedatei.
 - `--dest-ip` (default: `127.0.0.1`) — Ziel-IP für das Senden.
 - `--dest-port` (default: `20777`) — Ziel-Port.
 - `--speed` (default: `1.0`) — Geschwindigkeitsfaktor: `1.0` = Originalintervalle, `2.0` = doppelt so schnell (Intervalle halbiert), `0.5` = halb so schnell (Intervalle verdoppelt).
@@ -62,25 +62,25 @@ Hinweise:
 Aufzeichnen (Standardport 20777):
 
 ```bash
-python savePS4packets.py --port 20777 --out-file ps4_packets.jsonl
+python savePS4packets.py --port 20777 --out-file recordings/ps4_packets.jsonl
 ```
 
 Wiedergabe lokal (originale Geschwindigkeit):
 
 ```bash
-python playPS4packets.py --in-file ps4_packets.jsonl --dest-ip 127.0.0.1 --dest-port 20777 --speed 1.0
+python playPS4packets.py --in-file recordings/ps4_packets.jsonl --dest-ip 127.0.0.1 --dest-port 20777 --speed 1.0
 ```
 
 Wiedergabe doppelt so schnell:
 
 ```bash
-python playPS4packets.py --in-file ps4_packets.jsonl --dest-ip 127.0.0.1 --dest-port 20777 --speed 2.0
+python playPS4packets.py --in-file recordings/ps4_packets.jsonl --dest-ip 127.0.0.1 --dest-port 20777 --speed 2.0
 ```
 
 Beispiel für robustes Schreiben (häufiges Logging, aber seltener fsync):
 
 ```bash
-python savePS4packets.py --out-file ps4_packets.jsonl --flush-every 200 --flush-interval 2.0 --fsync-every-seconds 30
+python savePS4packets.py --out-file recordings/ps4_packets.jsonl --flush-every 200 --flush-interval 2.0 --fsync-every-seconds 30
 ```
 
 ## ❗ Wichtige Hinweise & Troubleshooting
