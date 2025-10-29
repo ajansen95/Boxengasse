@@ -74,9 +74,9 @@ def main():
 
             # Entscheide, ob wir fsync sollten
             do_fsync = False
-            if (fsync_every_seconds and fsync_every_seconds > 0.0 and (now - last_fsync_time) >= fsync_every_seconds):
+            if 0.0 < fsync_every_seconds <= (now - last_fsync_time):
                 do_fsync = True
-            if (fsync_every_packets and fsync_every_packets > 0 and count_since_fsync >= fsync_every_packets):
+            if fsync_every_packets and 0 < fsync_every_packets <= count_since_fsync:
                 do_fsync = True
 
             if do_fsync:
